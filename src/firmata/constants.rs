@@ -1,9 +1,38 @@
-#![allow(dead_code)]
-
 //! Firmata protocol constants.
 
+#![allow(dead_code)]
+
 // ########################################
-// IoData related functions
+// Enumerates the possible modes for a pin.
+
+pub const MODE_INPUT: u8 = 0x00;
+pub const MODE_OUTPUT: u8 = 0x01;
+pub const MODE_ANALOG: u8 = 0x02;
+pub const MODE_PWM: u8 = 0x03;
+pub const MODE_SERVO: u8 = 0x04;
+pub const MODE_SHIFT: u8 = 0x05;
+pub const MODE_I2C: u8 = 0x06;
+pub const MODE_ONEWIRE: u8 = 0x07;
+pub const MODE_STEPPER: u8 = 0x08;
+pub const MODE_ENCODER: u8 = 0x09;
+pub const MODE_SERIAL: u8 = 0x0A;
+pub const MODE_PULLUP: u8 = 0x0B;
+pub const MODE_SPI: u8 = 0x0C;
+pub const MODE_SONAR: u8 = 0x0D;
+pub const MODE_TONE: u8 = 0x0E;
+pub const MODE_DHT: u8 = 0x0F;
+pub const MODE_UNSUPPORTED: u8 = 0x7F;
+
+// ########################################
+// Enumerates the possible resolutions for a pin.
+pub const RESOLUTION_DIGITAL: u8 = 0x01;
+pub const RESOLUTION_PWM: u8 = 0x08; // 8-bit PWM
+pub const RESOLUTION_SERVO: u8 = 0x0E; // 14-bit for servo (0-180 deg)
+pub const RESOLUTION_I2C: u8 = 0x08;
+pub const RESOLUTION_SPI: u8 = 0x08;
+
+// ########################################
+// Firmata related magic numbers
 
 /// For non-compatible changes
 pub const PROTOCOL_MAJOR_VERSION: u8 = 2;
