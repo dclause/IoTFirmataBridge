@@ -1,10 +1,10 @@
 // Implémentation Raspberry Pi (rppal)
 
 use super::PinManagerExt;
+use parking_lot::Mutex;
 use rppal::gpio::{Gpio, OutputPin};
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::Mutex;
 
 #[derive(Clone)]
 pub struct RaspiPinManager {

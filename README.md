@@ -1,19 +1,25 @@
 # Iot Firmata Bridge
 
-**Lightweight Firmata server daemon to make your IoT devices (Raspberry Pi, Nvidia Jetson, etc.) Firmata-compatible over TCP.**
+**Lightweight Firmata server daemon to make your IoT devices (Raspberry Pi, Nvidia Jetson, etc.) Firmata-compatible over
+TCP.**
 
 ---
 
 ## ❓ What is IotFirmataBridge?
 
-IotFirmataBridge is a lightweight daemon designed to run on various IoT devices. It exposes their native hardware interfaces (GPIO, I2C, SPI, PWM, etc.) via the Firmata protocol over TCP.  
-This allows unified, remote control of devices like Raspberry Pi or Jetson using Firmata-compatible clients - for example, using the popular [Johnny-Five](https://github.com/rwaldron/johnny-five) robotics framework, the newer [Hermes-Five](https://github.com/dclause/hermes-five) framework or [Hermes-Studio](https://github.com/dclause/hermes-studio) platform, or any other Firmata-compatible client.
+IotFirmataBridge is a lightweight daemon designed to run on various IoT devices. It exposes their native hardware
+interfaces (GPIO, I2C, SPI, PWM, etc.) via the Firmata protocol over TCP.  
+This allows unified, remote control of devices like Raspberry Pi or Jetson using Firmata-compatible clients - for
+example, using the popular [Johnny-Five](https://github.com/rwaldron/johnny-five) robotics framework, the
+newer [Hermes-Five](https://github.com/dclause/hermes-five) framework
+or [Hermes-Studio](https://github.com/dclause/hermes-studio) platform, or any other Firmata-compatible client.
 
 ---
 
 ## 💡 Why use IotFirmataBridge?
 
-Firmata servers exist for microcontroller boards (Arduino, ESP32, NodeMCU, Spark.io, etc.), but not for more capable boards like the Raspberry Pi or Nvidia Jetson.
+Firmata servers exist for microcontroller boards (Arduino, ESP32, NodeMCU, Spark.io, etc.), but not for more capable
+boards like the Raspberry Pi or Nvidia Jetson.
 IotFirmataBridge fills this gap by exposing these platforms to Firmata-compatible clients.
 
 - **Unified control:** Control heterogeneous IoT boards using a consistent Firmata API
@@ -46,6 +52,7 @@ sudo ./target/release/iotfirmatabridge
 ```
 
 **Available features:**
+
 - `raspberry`: enables support for Raspberry Pi
 - `jetson`: enables support for Nvidia Jetson boards
 

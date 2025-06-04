@@ -16,6 +16,10 @@ pub use crate::hardware::mock::MockPinManager as PinManager;
 
 // Définition du trait PinManager
 pub trait PinManagerExt: Send + Sync + 'static {
-    fn new() -> Self where Self: Sized;
+    fn new() -> Self
+    where
+        Self: Sized;
+    fn get_name(&self) -> String;
+    fn get_capabilities(&self) -> Vec<u8>;
     fn set_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError>;
 }
