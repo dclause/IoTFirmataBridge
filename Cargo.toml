@@ -1,0 +1,23 @@
+[package]
+name = "iotfirmatabridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["Dominique CLAUSE <dom.clause@gmail.com>"]
+description = "Firmata server daemon to make your IoT devices Firmata-compatible remotely."
+license = "MIT"
+repository = "https://github.com/dclause/iotfirmatabridge"
+
+[badges.maintenance]
+status = "actively-developed"
+
+[dependencies]
+tokio = { version = "1.45.1", features = ["net", "io-util", "rt", "rt-multi-thread", "macros", "parking_lot"] }
+rppal = { version = "0.22.1", optional = true }
+parking_lot = "0.12.4"
+log = "0.4"
+env_logger = "0.11.8"
+
+[features]
+raspberry = ["dep:rppal"]
+jetson = []
+mock = []
