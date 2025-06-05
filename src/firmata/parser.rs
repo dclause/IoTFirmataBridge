@@ -58,11 +58,18 @@ impl FirmataParser {
     /// Runs the parser, reading from the socket and processing Firmata messages.
     pub async fn run(mut self) -> Result<(), FirmataError> {
         loop {
-            let command = self.read(1).await?[0];
+            let input = self.read(1).await?[0];
+
+            // Special case of commands using channel blended in the first byte:
+            let (command, channel) = match input > START_SYSEX {
+                true => (input, 0),
+                false => (input & START_SYSEX, input & MODE_DHT),
+            };
+
             debug!("New command received: {:02X?}", command);
             match command {
                 SET_PIN_MODE => self.handle_set_pin_mode().await?,
-                DIGITAL_MESSAGE => self.handle_digital_message(command).await?,
+                DIGITAL_MESSAGE => self.handle_digital_message(channel).await?,
                 SYSTEM_RESET => (),
                 START_SYSEX => {
                     let sysex_command = self.read(1).await?[0];
@@ -122,10 +129,10 @@ impl FirmataParser {
         self.pm.set_pin_mode(pin, mode)
     }
 
-    async fn handle_digital_message(&mut self, command: u8) -> Result<(), FirmataError> {
+    async fn handle_digital_message(&mut self, port: u8) -> Result<(), FirmataError> {
         let buf = self.read(2).await?;
-        debug!("handle_digital_message: {:02X?}: {:02X?}", command, buf);
-        let port = command & !DIGITAL_MESSAGE;
+        debug!("handle_digital_message: {:02X?}: {:02X?}", port, buf);
+        // let port = command & !DIGITAL_MESSAGE;
         let lsb = buf[0] & SYSEX_REALTIME;
         let msb = buf[1] & SYSEX_REALTIME;
         let values = (msb << 7) | lsb;
