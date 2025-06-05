@@ -24,13 +24,13 @@ impl MockPinManager {
                 // I2C1 SDA, SCL
                 capabilities.extend_from_slice(&[MODE_I2C, RESOLUTION_I2C]);
             }
-            7 | 8 | 9 | 10 | 11 => {
+            10..=20 => {
                 // Analog pin
                 capabilities.extend_from_slice(&[MODE_ANALOG, RESOLUTION_ANALOG]);
                 // SPI0
                 capabilities.extend_from_slice(&[MODE_SPI, RESOLUTION_SPI]);
             }
-            12 | 13 | 18 | 19 | 32 | 33 | 35 | 36 | 38 | 40 => {
+            25..=30 => {
                 // Hardware PWM pins
                 capabilities.extend_from_slice(&[MODE_PWM, RESOLUTION_PWM]);
                 capabilities.extend_from_slice(&[MODE_SERVO, RESOLUTION_SERVO]);
@@ -72,7 +72,7 @@ impl PinManagerExt for MockPinManager {
     }
     fn get_capabilities(&self) -> Vec<u8> {
         let mut response = vec![];
-        for pin_num in 0..=40 {
+        for pin_num in 0..=30 {
             response.extend(self.get_pin_capabilities(pin_num));
         }
         response
@@ -82,7 +82,7 @@ impl PinManagerExt for MockPinManager {
         let mut response = vec![]; // No analog pin
         for pin_num in 0..=40 {
             match pin_num {
-                7 | 8 | 9 | 10 | 11 => response.push(pin_num as u8),
+                10..=20 => response.push(pin_num as u8),
                 _ => response.push(SYSEX_REALTIME), // Unsupported pin
             }
         }
