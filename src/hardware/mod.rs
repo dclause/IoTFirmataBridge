@@ -21,5 +21,6 @@ pub trait PinManagerExt: Send + Sync + 'static {
         Self: Sized;
     fn get_name(&self) -> String;
     fn get_capabilities(&self) -> Vec<u8>;
+    fn get_analog_mapping(&self) -> Vec<u8>;
     fn set_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError>;
 }

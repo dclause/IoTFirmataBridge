@@ -26,6 +26,7 @@ pub const MODE_UNSUPPORTED: u8 = 0x7F;
 // ########################################
 // Enumerates the possible resolutions for a pin.
 pub const RESOLUTION_DIGITAL: u8 = 0x01;
+pub const RESOLUTION_ANALOG: u8 = 0x08;
 pub const RESOLUTION_PWM: u8 = 0x08; // 8-bit PWM
 pub const RESOLUTION_SERVO: u8 = 0x0E; // 14-bit for servo (0-180 deg)
 pub const RESOLUTION_I2C: u8 = 0x08;
