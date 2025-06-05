@@ -108,4 +108,9 @@ impl PinManagerExt for MockPinManager {
         }
         Ok(())
     }
+
+    fn send_i2c_data(&self, address: u16, data: Vec<u16>) -> Result<(), FirmataError> {
+        println!("DefaultPinManager: (virtual) send i2c data (address={}) data={:?}", address, data);
+        Ok(())
+    }
 }

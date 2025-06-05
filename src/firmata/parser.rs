@@ -80,6 +80,7 @@ impl FirmataParser {
                         CAPABILITY_QUERY => self.handle_capability_query().await?,
                         ANALOG_MAPPING_QUERY => self.handle_analog_mapping_query().await?,
                         EXTENDED_ANALOG => self.handle_extended_analog_write().await?,
+                        I2C_REQUEST => self.handle_ic2_request().await?,
                         END_SYSEX => (),
                         x => eprintln!("FirmataParser: skipping unexpected sysex command: {:02X?}", x),
                     }
@@ -176,6 +177,27 @@ impl FirmataParser {
 
         trace!("handle_extended_analog_write: set pin {} to {}", pin, value);
         self.pm.set_analog_pin(pin, value)?;
+
+        Ok(())
+    }
+
+    async fn handle_ic2_request(&mut self) -> Result<(), FirmataError> {
+        let buf = self.read_sysex_data().await?;
+        trace!("handle_ic2_request: {:02X?}", buf);
+
+        let lsb: u16 = (buf[0] & SYSEX_REALTIME) as u16;
+        let msb: u16 = (buf[1] & SYSEX_REALTIME) as u16;
+        let address = (msb << 7) | lsb;
+
+        let mut data: Vec<u16> = vec![];
+        for i in (2..buf.len()).step_by(2) {
+            let lsb: u16 = (buf[i] & SYSEX_REALTIME) as u16;
+            let msb: u16 = (buf[i + 1] & SYSEX_REALTIME) as u16;
+            data.push((msb << 7) | lsb);
+        }
+
+        trace!("handle_ic2_request: send i2C data to address {}; data={:?}", address, data);
+        self.pm.send_i2c_data(address, data)?;
 
         Ok(())
     }

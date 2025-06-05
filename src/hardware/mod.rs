@@ -25,4 +25,5 @@ pub trait PinManagerExt: Send + Sync + 'static {
     fn set_pin_mode(&self, pin: u8, mode: u8) -> Result<(), FirmataError>;
     fn set_digital_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError>;
     fn set_analog_pin(&self, pin: u8, value: usize) -> Result<(), FirmataError>;
+    fn send_i2c_data(&self, address: u16, data: Vec<u16>) -> Result<(), FirmataError>;
 }
