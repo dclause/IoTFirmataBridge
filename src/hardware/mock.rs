@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct MockPinManager {
-    pins: Arc<Mutex<HashMap<u8, u8>>>,
+    pins: Arc<Mutex<HashMap<u8, usize>>>,
 }
 
 impl MockPinManager {
@@ -24,13 +24,13 @@ impl MockPinManager {
                 // I2C1 SDA, SCL
                 capabilities.extend_from_slice(&[MODE_I2C, RESOLUTION_I2C]);
             }
-            10..=20 => {
+            5 | 6 | 10 | 11 | 21 | 22 => {
                 // Analog pin
                 capabilities.extend_from_slice(&[MODE_ANALOG, RESOLUTION_ANALOG]);
                 // SPI0
                 capabilities.extend_from_slice(&[MODE_SPI, RESOLUTION_SPI]);
             }
-            25..=30 => {
+            8 | 9 | 18 | 19 | 28 | 29 => {
                 // Hardware PWM pins
                 capabilities.extend_from_slice(&[MODE_PWM, RESOLUTION_PWM]);
                 capabilities.extend_from_slice(&[MODE_SERVO, RESOLUTION_SERVO]);
@@ -47,10 +47,11 @@ impl MockPinManager {
     }
 
     /// Updates the pin value. Returns true/false if the new value is different from the prev one.
-    pub fn set_state(&self, pin: u8, value: u8) -> bool {
+    fn set_state(&self, pin: u8, value: usize) -> bool {
         let mut pins = self.pins.lock().unwrap();
         if !pins.contains_key(&pin) {
             pins.insert(pin, value);
+            return true;
         }
 
         match pins.insert(pin, value) {
@@ -82,7 +83,7 @@ impl PinManagerExt for MockPinManager {
         let mut response = vec![]; // No analog pin
         for pin_num in 0..=40 {
             match pin_num {
-                10..=20 => response.push(pin_num as u8),
+                5 | 6 | 10 | 11 | 21 | 22 => response.push(pin_num as u8),
                 _ => response.push(SYSEX_REALTIME), // Unsupported pin
             }
         }
@@ -95,7 +96,16 @@ impl PinManagerExt for MockPinManager {
     }
 
     fn set_digital_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError> {
-        println!("DefaultPinManager: (virtual) set digital pin {} = {}", pin, value);
+        if self.set_state(pin, value as usize) != value {
+            println!("DefaultPinManager: (virtual) set digital pin {} = {}", pin, value);
+        }
+        Ok(())
+    }
+
+    fn set_analog_pin(&self, pin: u8, value: usize) -> Result<(), FirmataError> {
+        if self.set_state(pin, value) {
+            println!("DefaultPinManager: (virtual) set analog pin {} = {}", pin, value);
+        }
         Ok(())
     }
 }

@@ -69,7 +69,8 @@ impl FirmataParser {
             debug!("New command received: {:02X?}", command);
             match command {
                 SET_PIN_MODE => self.handle_set_pin_mode().await?,
-                DIGITAL_MESSAGE => self.handle_digital_message(channel).await?,
+                DIGITAL_MESSAGE => self.handle_digital_write(channel).await?,
+                ANALOG_MESSAGE => self.handle_analog_write(channel).await?,
                 SYSTEM_RESET => (),
                 START_SYSEX => {
                     let sysex_command = self.read(1).await?[0];
@@ -77,7 +78,8 @@ impl FirmataParser {
                     match sysex_command {
                         REPORT_FIRMWARE => self.handle_firmware_report().await?,
                         CAPABILITY_QUERY => self.handle_capability_query().await?,
-                        ANALOG_MAPPING_QUERY => self.handle_analog_mapping_response().await?,
+                        ANALOG_MAPPING_QUERY => self.handle_analog_mapping_query().await?,
+                        EXTENDED_ANALOG => self.handle_extended_analog_write().await?,
                         END_SYSEX => (),
                         x => eprintln!("FirmataParser: skipping unexpected sysex command: {:02X?}", x),
                     }
@@ -100,22 +102,22 @@ impl FirmataParser {
 
     async fn handle_capability_query(&mut self) -> Result<(), FirmataError> {
         let buf = self.read_sysex_data().await?;
-        trace!("handle_firmware_report: {:02X?}", buf);
+        trace!("handle_capability_query: {:02X?}", buf);
         let mut capabilities = vec![START_SYSEX, CAPABILITY_RESPONSE];
         capabilities.extend(self.pm.get_capabilities());
         capabilities.push(END_SYSEX);
-        debug!("Send capabilities: {:?}", capabilities);
+        debug!("handle_capability_query: capabilities={:?}", capabilities);
         self.write(capabilities).await?;
         Ok(())
     }
 
-    async fn handle_analog_mapping_response(&mut self) -> Result<(), FirmataError> {
+    async fn handle_analog_mapping_query(&mut self) -> Result<(), FirmataError> {
         let buf = self.read_sysex_data().await?;
-        trace!("handle_analog_mapping_response: {:02X?}", buf);
+        trace!("handle_analog_mapping_query: {:02X?}", buf);
         let mut analog_mapping = vec![START_SYSEX, ANALOG_MAPPING_RESPONSE];
         analog_mapping.extend(self.pm.get_analog_mapping());
         analog_mapping.push(END_SYSEX);
-        debug!("Send analog mapping: {:?}", analog_mapping);
+        debug!("handle_analog_mapping_query: Send analog mapping: {:?}", analog_mapping);
         self.write(analog_mapping).await?;
         Ok(())
     }
@@ -125,27 +127,55 @@ impl FirmataParser {
         trace!("handle_set_pin_mode: {:02X?}", buf);
         let pin = buf[0];
         let mode = buf[1];
-        debug!("Set pin {} to mode {}", pin, mode);
+        debug!("handle_set_pin_mode: set pin {} to mode {}", pin, mode);
         self.pm.set_pin_mode(pin, mode)
     }
 
-    async fn handle_digital_message(&mut self, port: u8) -> Result<(), FirmataError> {
+    async fn handle_digital_write(&mut self, port: u8) -> Result<(), FirmataError> {
         let buf = self.read(2).await?;
-        debug!("handle_digital_message: {:02X?}: {:02X?}", port, buf);
-        // let port = command & !DIGITAL_MESSAGE;
+        trace!("handle_digital_write: {:02X?}: {:02X?}", port, buf);
         let lsb = buf[0] & SYSEX_REALTIME;
         let msb = buf[1] & SYSEX_REALTIME;
         let values = (msb << 7) | lsb;
-        debug!("handle_digital_message: port={} values={:08b}", port, values);
+        trace!("handle_digital_write: port={} values={:08b}", port, values);
 
         for i in 0..8 {
             let pin = port * 8 + i;
             let digital = (values & (1 << i)) != 0;
-            if self.pm.set_state(pin, digital as u8) {
-                debug!("Set pin {} to {}", pin, digital);
-                self.pm.set_digital_pin(pin, digital)?;
-            }
+            trace!("handle_digital_write: set pin {} to {}", pin, digital);
+            self.pm.set_digital_pin(pin, digital)?;
         }
+
+        Ok(())
+    }
+
+    async fn handle_analog_write(&mut self, pin: u8) -> Result<(), FirmataError> {
+        let buf = self.read(2).await?;
+        trace!("handle_analog_write: {:02X?}: {:02X?}", pin, buf);
+        let lsb: usize = (buf[0] & SYSEX_REALTIME) as usize;
+        let msb: usize = (buf[1] & SYSEX_REALTIME) as usize;
+        let value = (msb << 7) | lsb;
+
+        trace!("handle_analog_write: set pin {} to {}", pin, value);
+        self.pm.set_analog_pin(pin, value)?;
+
+        Ok(())
+    }
+
+    async fn handle_extended_analog_write(&mut self) -> Result<(), FirmataError> {
+        let buf = self.read_sysex_data().await?;
+        trace!("handle_extended_analog_write: {:02X?}", buf);
+        let pin = buf[0];
+        let lsb: usize = (buf[1] & SYSEX_REALTIME) as usize;
+        let msb: usize = (buf[2] & SYSEX_REALTIME) as usize;
+        let mut value = (msb << 7) | lsb;
+        if buf.len() > 3 {
+            let xsb: usize = (buf[3] & SYSEX_REALTIME) as usize;
+            value = (xsb << 14) | value;
+        }
+
+        trace!("handle_extended_analog_write: set pin {} to {}", pin, value);
+        self.pm.set_analog_pin(pin, value)?;
 
         Ok(())
     }

@@ -24,4 +24,5 @@ pub trait PinManagerExt: Send + Sync + 'static {
     fn get_analog_mapping(&self) -> Vec<u8>;
     fn set_pin_mode(&self, pin: u8, mode: u8) -> Result<(), FirmataError>;
     fn set_digital_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError>;
+    fn set_analog_pin(&self, pin: u8, value: usize) -> Result<(), FirmataError>;
 }
