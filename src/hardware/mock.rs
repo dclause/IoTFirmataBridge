@@ -2,9 +2,13 @@
 
 use crate::firmata::*;
 use crate::hardware::PinManagerExt;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-pub struct MockPinManager;
+pub struct MockPinManager {
+    pins: Arc<Mutex<HashMap<u8, u8>>>,
+}
 
 impl MockPinManager {
     fn get_pin_capabilities(&self, bcm_pin: u8) -> Vec<u8> {
@@ -41,11 +45,26 @@ impl MockPinManager {
         capabilities.push(SYSEX_REALTIME); // End of capabilities for this pin
         capabilities
     }
+
+    /// Updates the pin value. Returns true/false if the new value is different from the prev one.
+    pub fn set_state(&self, pin: u8, value: u8) -> bool {
+        let mut pins = self.pins.lock().unwrap();
+        if !pins.contains_key(&pin) {
+            pins.insert(pin, value);
+        }
+
+        match pins.insert(pin, value) {
+            None => true,
+            Some(prev) => prev != value,
+        }
+    }
 }
 
 impl PinManagerExt for MockPinManager {
     fn new() -> Self {
-        MockPinManager
+        MockPinManager {
+            pins: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 
     fn get_name(&self) -> String {
@@ -70,8 +89,13 @@ impl PinManagerExt for MockPinManager {
         response
     }
 
-    fn set_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError> {
-        println!("DefaultPinManager: (virtual) set_pin({}) = {}", pin, value);
+    fn set_pin_mode(&self, pin: u8, mode: u8) -> Result<(), FirmataError> {
+        println!("DefaultPinManager: (virtual) set pin {} to mode {}", pin, mode);
+        Ok(())
+    }
+
+    fn set_digital_pin(&self, pin: u8, value: bool) -> Result<(), FirmataError> {
+        println!("DefaultPinManager: (virtual) set digital pin {} = {}", pin, value);
         Ok(())
     }
 }

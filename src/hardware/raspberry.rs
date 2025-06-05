@@ -20,7 +20,7 @@ impl PinManagerExt for RaspiPinManager {
         }
     }
 
-    fn set_pin(&self, pin: u8, value: bool) {
+    fn set_digital_pin(&self, pin: u8, value: bool) {
         let mut pins = self.pins.lock().unwrap();
         if !pins.contains_key(&pin) {
             let gpio_guard = self.gpio.lock().unwrap();

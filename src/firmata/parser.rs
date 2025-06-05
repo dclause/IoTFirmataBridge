@@ -61,7 +61,8 @@ impl FirmataParser {
             let command = self.read(1).await?[0];
             debug!("New command received: {:02X?}", command);
             match command {
-                DIGITAL_MESSAGE => self.handle_digital_message().await?,
+                SET_PIN_MODE => self.handle_set_pin_mode().await?,
+                DIGITAL_MESSAGE => self.handle_digital_message(command).await?,
                 SYSTEM_RESET => (),
                 START_SYSEX => {
                     let sysex_command = self.read(1).await?[0];
@@ -112,12 +113,33 @@ impl FirmataParser {
         Ok(())
     }
 
-    async fn handle_digital_message(&mut self) -> Result<(), FirmataError> {
+    async fn handle_set_pin_mode(&mut self) -> Result<(), FirmataError> {
         let buf = self.read(2).await?;
-        trace!("handle_digital_message: {:02X?}", buf);
+        trace!("handle_set_pin_mode: {:02X?}", buf);
         let pin = buf[0];
-        let value = buf[1] == 1;
-        debug!("Set pin {} to {}", pin, value);
-        self.pm.set_pin(pin, value)
+        let mode = buf[1];
+        debug!("Set pin {} to mode {}", pin, mode);
+        self.pm.set_pin_mode(pin, mode)
+    }
+
+    async fn handle_digital_message(&mut self, command: u8) -> Result<(), FirmataError> {
+        let buf = self.read(2).await?;
+        debug!("handle_digital_message: {:02X?}: {:02X?}", command, buf);
+        let port = command & !DIGITAL_MESSAGE;
+        let lsb = buf[0] & SYSEX_REALTIME;
+        let msb = buf[1] & SYSEX_REALTIME;
+        let values = (msb << 7) | lsb;
+        debug!("handle_digital_message: port={} values={:08b}", port, values);
+
+        for i in 0..8 {
+            let pin = port * 8 + i;
+            let digital = (values & (1 << i)) != 0;
+            if self.pm.set_state(pin, digital as u8) {
+                debug!("Set pin {} to {}", pin, digital);
+                self.pm.set_digital_pin(pin, digital)?;
+            }
+        }
+
+        Ok(())
     }
 }

@@ -10,7 +10,7 @@ impl PinManagerExt for JetsonPinManager {
         JetsonPinManager
     }
 
-    fn set_pin(&self, pin: u8, value: bool) {
+    fn set_digital_pin(&self, pin: u8, value: bool) {
         // TODO: Implémenter accès GPIO spécifique Jetson ici
         println!("Jetson: set pin {} to {}", pin, value);
     }
